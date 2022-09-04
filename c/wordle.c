@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "utils.h"
 
@@ -92,8 +93,8 @@ void append_words(char *filename) {
 	fclose(f);
 }
 
-void write_solution(size_t i, size_t j, size_t k, size_t l, size_t m);
-void write_anagrams(size_t index);
+void write_solution(StringBuilder *sb, size_t i, size_t j, size_t k, size_t l, size_t m);
+void write_anagrams(StringBuilder *sb, size_t index);
 
 int main() {
 	struct timespec t0;
@@ -190,6 +191,7 @@ int main() {
 	clock_gettime(CLOCK_REALTIME, &t2);
 
 	uint32_t result_counter = 0;
+	StringBuilder sb = { .len = 0 };
 
 	// 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567 01234567
 	#pragma omp parallel for schedule(dynamic)
@@ -228,8 +230,8 @@ int main() {
 						#pragma omp atomic capture
 						count = result_counter++;
 
-						printf("%3d. ", count);
-						write_solution(indices[i], indices[j], indices[k], indices[l], indices[m]);
+						sb.len += sprintf(sb.buffer + sb.len, "%3d. ", count);
+						write_solution(&sb, indices[i], indices[j], indices[k], indices[l], indices[m]);
 					}
 				}
 			}
@@ -241,6 +243,7 @@ int main() {
 
 	free(skip);
 
+	write(STDOUT_FILENO, sb.buffer, sb.len);
 	printf("%4ldms prepare words\n", CLOCK_DIFF_MILLIS(t1, t0));
 	printf("%4ldms compute tables\n", CLOCK_DIFF_MILLIS(t2, t1));
 	printf("%4ldms find solutions\n", CLOCK_DIFF_MILLIS(t3, t2));
@@ -249,30 +252,30 @@ int main() {
 	return EXIT_SUCCESS;
 }
 
-void write_solution(size_t i, size_t j, size_t k, size_t l, size_t m) {
-	write_anagrams(i);
-	putchar(' ');
-	write_anagrams(j);
-	putchar(' ');
-	write_anagrams(k);
-	putchar(' ');
-	write_anagrams(l);
-	putchar(' ');
-	write_anagrams(m);
-	putchar('\n');
+void write_solution(StringBuilder *sb, size_t i, size_t j, size_t k, size_t l, size_t m) {
+	write_anagrams(sb, i);
+	sb->buffer[sb->len++] = ' ';
+	write_anagrams(sb, j);
+	sb->buffer[sb->len++] = ' ';
+	write_anagrams(sb, k);
+	sb->buffer[sb->len++] = ' ';
+	write_anagrams(sb, l);
+	sb->buffer[sb->len++] = ' ';
+	write_anagrams(sb, m);
+	sb->buffer[sb->len++] = '\n';
 }
 
 // 1042 cylix -----I----LC--------Y---X---
 // 1043 xylic -----I----LC--------Y---X---
 // 1044 flick -----I----LC-------F--K-----
 
-void write_anagrams(size_t index) {
-	printf("%s", words[index].raw);      // cylix
+void write_anagrams(StringBuilder *sb, size_t index) {
+	sb->len += sprintf(sb->buffer + sb->len, "%s", words[index].raw);      // cylix
 
-	uint32_t letters = words[index].letters;    // -----I----LC--------Y---X---
+	uint32_t letters = words[index].letters;                                         // -----I----LC--------Y---X---
 
 	for (index++; words[index].letters == letters; index++) {
-		printf("/%s", words[index].raw); // xylic
+		sb->len += sprintf(sb->buffer + sb->len, "/%s", words[index].raw); // xylic
 	}
 }
 
