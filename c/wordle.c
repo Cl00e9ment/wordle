@@ -100,10 +100,10 @@ int main() {
 	clock_gettime(CLOCK_REALTIME, &t0);
 
 	// Uncomment the following 1 line to find 538 solutions:
-	// appendWords("words_alpha.txt")
+	// appendWords("../words_alpha.txt")
 	// Uncomment the following 2 lines to find 10 solutions:
-	append_words("wordle-nyt-answers-alphabetical.txt");
-	append_words("wordle-nyt-allowed-guesses.txt");
+	append_words("../wordle-nyt-answers-alphabetical.txt");
+	append_words("../wordle-nyt-allowed-guesses.txt");
 
 	// xstrngr: "Your outer loop can be restricted to words with q or x   [q or j]
 	//           when these run out, you can't have a solution with the remaining 24 letters"
